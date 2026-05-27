@@ -1,0 +1,100 @@
+{
+  "_comment": "Import this into DecisionRules.io as a Decision Table rule for EMEA pre-trade checks.",
+  "name": "Pre-Trade EMEA Compliance",
+  "description": "EMEA regulatory pre-trade compliance (MiFID II, MAR, EMIR, UCITS, SFDR, EU SSR)",
+  "type": "decision-table",
+  "status": "published",
+  "inputSchema": {
+    "ticker": { "type": "string" },
+    "side": { "type": "string" },
+    "asset_class": { "type": "string" },
+    "has_inside_information": { "type": "boolean" },
+    "market_manipulation_flag": { "type": "boolean" },
+    "net_short_position_pct": { "type": "number" },
+    "is_share_not_borrowable": { "type": "boolean" },
+    "is_ucits_fund": { "type": "boolean" },
+    "projected_position_pct": { "type": "number" },
+    "is_aifmd_fund": { "type": "boolean" },
+    "current_leverage_ratio": { "type": "number" },
+    "aifmd_max_leverage": { "type": "number" },
+    "is_emir_clearing_obligated": { "type": "boolean" },
+    "is_centrally_cleared": { "type": "boolean" },
+    "str_flag": { "type": "boolean" },
+    "is_sfdr_article8_or_9": { "type": "boolean" }
+  },
+  "outputSchema": {
+    "ruleId": { "type": "string" },
+    "ruleName": { "type": "string" },
+    "jurisdiction": { "type": "string" },
+    "status": { "type": "string" },
+    "message": { "type": "string" },
+    "regulationRef": { "type": "string" }
+  },
+  "decisionTable": {
+    "columns": [
+      { "condition": { "type": "simple", "inputVariable": "has_inside_information" }, "columnId": "c1" },
+      { "condition": { "type": "simple", "inputVariable": "market_manipulation_flag" }, "columnId": "c2" },
+      { "condition": { "type": "simple", "inputVariable": "is_share_not_borrowable" }, "columnId": "c3" },
+      { "condition": { "type": "simple", "inputVariable": "str_flag" }, "columnId": "c4" },
+      { "condition": { "type": "simple", "inputVariable": "is_emir_clearing_obligated" }, "columnId": "c5" },
+      { "output": { "outputVariable": "ruleId" }, "columnId": "o1" },
+      { "output": { "outputVariable": "ruleName" }, "columnId": "o2" },
+      { "output": { "outputVariable": "jurisdiction" }, "columnId": "o3" },
+      { "output": { "outputVariable": "status" }, "columnId": "o4" },
+      { "output": { "outputVariable": "message" }, "columnId": "o5" },
+      { "output": { "outputVariable": "regulationRef" }, "columnId": "o6" }
+    ],
+    "rows": [
+      {
+        "cells": [
+          { "columnId": "c1", "value": "true" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "EMEA-001" }, { "columnId": "o2", "value": "MAR – Inside Information / Insider Trading" },
+          { "columnId": "o3", "value": "EMEA" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Trading prohibited. Firm or trader holds inside information. MAR Article 8 applies." },
+          { "columnId": "o6", "value": "EU MAR – Article 8 (Regulation EU 596/2014)" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "true" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "EMEA-002" }, { "columnId": "o2", "value": "MAR – Market Manipulation Risk" },
+          { "columnId": "o3", "value": "EMEA" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Order shows market manipulation indicators (layering/spoofing). Blocked under MAR Article 12." },
+          { "columnId": "o6", "value": "EU MAR – Article 12 (Regulation EU 596/2014)" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "true" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "EMEA-005" }, { "columnId": "o2", "value": "EU SSR – Uncovered Short Sale Prohibited" },
+          { "columnId": "o3", "value": "EMEA" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Uncovered short selling is prohibited under EU SSR. Shares must be borrowed or locate confirmed." },
+          { "columnId": "o6", "value": "EU Short Selling Regulation – Art. 12 (Regulation EU 236/2012)" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "true" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "EMEA-015" }, { "columnId": "o2", "value": "MAR – Suspicious Transaction Report Required" },
+          { "columnId": "o3", "value": "EMEA" }, { "columnId": "o4", "value": "WARNING" },
+          { "columnId": "o5", "value": "Order flagged as suspicious. STR must be filed with the NCA under MAR Article 16." },
+          { "columnId": "o6", "value": "EU MAR – Article 16 (Regulation EU 596/2014)" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "true" },
+          { "columnId": "o1", "value": "EMEA-011" }, { "columnId": "o2", "value": "EMIR – Mandatory Central Clearing Obligation" },
+          { "columnId": "o3", "value": "EMEA" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Derivative falls under EMIR mandatory clearing but is not routed to a CCP." },
+          { "columnId": "o6", "value": "EMIR Article 4 (Regulation EU 648/2012)" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "_comment": "Import this into DecisionRules.io for corporate restriction pre-trade checks.",
+  "name": "Pre-Trade Corporate Compliance",
+  "description": "Firm-wide corporate restrictions: restricted list, blackout, mandate, concentration, locate",
+  "type": "decision-table",
+  "status": "published",
+  "inputSchema": {
+    "is_restricted": { "type": "boolean" },
+    "is_watch_list": { "type": "boolean" },
+    "blackout_period": { "type": "boolean" },
+    "employee_restricted": { "type": "boolean" },
+    "projected_position_pct": { "type": "number" },
+    "sector_pct": { "type": "number" },
+    "short_without_locate": { "type": "boolean" },
+    "asset_class": { "type": "string" },
+    "mandate_type": { "type": "string" },
+    "daily_turnover_pct": { "type": "number" }
+  },
+  "outputSchema": {
+    "ruleId": { "type": "string" },
+    "ruleName": { "type": "string" },
+    "jurisdiction": { "type": "string" },
+    "status": { "type": "string" },
+    "message": { "type": "string" },
+    "metricValue": { "type": "number" },
+    "threshold": { "type": "number" },
+    "regulationRef": { "type": "string" }
+  },
+  "decisionTable": {
+    "columns": [
+      { "condition": { "type": "simple", "inputVariable": "is_restricted" }, "columnId": "c1" },
+      { "condition": { "type": "simple", "inputVariable": "is_watch_list" }, "columnId": "c2" },
+      { "condition": { "type": "simple", "inputVariable": "blackout_period" }, "columnId": "c3" },
+      { "condition": { "type": "simple", "inputVariable": "employee_restricted" }, "columnId": "c4" },
+      { "condition": { "type": "simple", "inputVariable": "short_without_locate" }, "columnId": "c5" },
+      { "output": { "outputVariable": "ruleId" }, "columnId": "o1" },
+      { "output": { "outputVariable": "ruleName" }, "columnId": "o2" },
+      { "output": { "outputVariable": "jurisdiction" }, "columnId": "o3" },
+      { "output": { "outputVariable": "status" }, "columnId": "o4" },
+      { "output": { "outputVariable": "message" }, "columnId": "o5" },
+      { "output": { "outputVariable": "regulationRef" }, "columnId": "o6" }
+    ],
+    "rows": [
+      {
+        "cells": [
+          { "columnId": "c1", "value": "true" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "CORP-001" }, { "columnId": "o2", "value": "Restricted Securities List" },
+          { "columnId": "o3", "value": "CORPORATE" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Security is on the firm's restricted list. Trade blocked." },
+          { "columnId": "o6", "value": "Internal Policy – Restricted List" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "true" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "CORP-002" }, { "columnId": "o2", "value": "Watch List – Heightened Monitoring" },
+          { "columnId": "o3", "value": "CORPORATE" }, { "columnId": "o4", "value": "WARNING" },
+          { "columnId": "o5", "value": "Security is on the watch list. Compliance pre-approval required." },
+          { "columnId": "o6", "value": "Internal Policy – Watch List" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "true" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "CORP-003" }, { "columnId": "o2", "value": "Blackout Period" },
+          { "columnId": "o3", "value": "CORPORATE" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Trading is prohibited during the active blackout period." },
+          { "columnId": "o6", "value": "Internal Policy – Blackout Period" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "true" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "CORP-004" }, { "columnId": "o2", "value": "Employee Personal Account Dealing" },
+          { "columnId": "o3", "value": "CORPORATE" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Personal account dealing restricted. Pre-clearance required." },
+          { "columnId": "o6", "value": "Internal Policy – Personal Account Dealing" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "true" },
+          { "columnId": "o1", "value": "CORP-010" }, { "columnId": "o2", "value": "Short Sell Without Locate" },
+          { "columnId": "o3", "value": "CORPORATE" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Short sale requires a valid stock locate. No locate on file." },
+          { "columnId": "o6", "value": "Reg SHO Rule 203 / Internal Policy" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "_comment": "Import this into DecisionRules.io as a Decision Table rule for USA pre-trade checks.",
+  "name": "Pre-Trade USA Compliance",
+  "description": "USA regulatory pre-trade compliance rules (SEC, FINRA, CFTC, Volcker, Reg T)",
+  "type": "decision-table",
+  "status": "published",
+  "inputSchema": {
+    "ticker": { "type": "string" },
+    "side": { "type": "string", "enum": ["BUY","SELL","SHORT","COVER"] },
+    "asset_class": { "type": "string" },
+    "projected_position_pct": { "type": "number" },
+    "ownership_pct": { "type": "number" },
+    "is_restricted": { "type": "boolean" },
+    "short_without_locate": { "type": "boolean" },
+    "is_threshold_security": { "type": "boolean" },
+    "is_margin_account": { "type": "boolean" },
+    "margin_available": { "type": "number" },
+    "required_margin": { "type": "number" },
+    "is_registered_fund": { "type": "boolean" },
+    "sector_pct": { "type": "number" },
+    "is_banking_entity": { "type": "boolean" },
+    "is_prop_trade": { "type": "boolean" },
+    "is_restricted_security_rule144": { "type": "boolean" },
+    "day_trades_last_5_days": { "type": "number" },
+    "account_equity": { "type": "number" }
+  },
+  "outputSchema": {
+    "ruleId": { "type": "string" },
+    "ruleName": { "type": "string" },
+    "jurisdiction": { "type": "string" },
+    "status": { "type": "string", "enum": ["PASS","BLOCK","WARNING"] },
+    "message": { "type": "string" },
+    "regulationRef": { "type": "string" }
+  },
+  "decisionTable": {
+    "columns": [
+      { "condition": { "type": "simple", "inputVariable": "short_without_locate", "name": "Short Without Locate" }, "columnId": "c1" },
+      { "condition": { "type": "simple", "inputVariable": "is_threshold_security", "name": "Threshold Security" }, "columnId": "c2" },
+      { "condition": { "type": "simple", "inputVariable": "is_restricted_security_rule144", "name": "Rule 144 Restricted" }, "columnId": "c3" },
+      { "condition": { "type": "simple", "inputVariable": "is_banking_entity", "name": "Banking Entity" }, "columnId": "c4" },
+      { "condition": { "type": "simple", "inputVariable": "is_prop_trade", "name": "Prop Trade" }, "columnId": "c5" },
+      { "output": { "outputVariable": "ruleId" }, "columnId": "o1" },
+      { "output": { "outputVariable": "ruleName" }, "columnId": "o2" },
+      { "output": { "outputVariable": "jurisdiction" }, "columnId": "o3" },
+      { "output": { "outputVariable": "status" }, "columnId": "o4" },
+      { "output": { "outputVariable": "message" }, "columnId": "o5" },
+      { "output": { "outputVariable": "regulationRef" }, "columnId": "o6" }
+    ],
+    "rows": [
+      {
+        "cells": [
+          { "columnId": "c1", "value": "true" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "USA-001" }, { "columnId": "o2", "value": "Reg SHO – Short Sale Locate Required" },
+          { "columnId": "o3", "value": "USA" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Short sale requires a valid locate under Reg SHO Rule 203." },
+          { "columnId": "o6", "value": "Regulation SHO Rule 203" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "true" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "USA-002" }, { "columnId": "o2", "value": "Reg SHO – Threshold Security" },
+          { "columnId": "o3", "value": "USA" }, { "columnId": "o4", "value": "WARNING" },
+          { "columnId": "o5", "value": "Security is on the Reg SHO threshold list. Close-out obligations apply." },
+          { "columnId": "o6", "value": "Regulation SHO Rule 203(b)(3)" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "true" }, { "columnId": "c4", "value": "" }, { "columnId": "c5", "value": "" },
+          { "columnId": "o1", "value": "USA-009" }, { "columnId": "o2", "value": "SEC Rule 144 – Restricted Securities" },
+          { "columnId": "o3", "value": "USA" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Security is a Rule 144 restricted/control security. Holding period and volume limits apply." },
+          { "columnId": "o6", "value": "SEC Rule 144" }
+        ]
+      },
+      {
+        "cells": [
+          { "columnId": "c1", "value": "" }, { "columnId": "c2", "value": "" },
+          { "columnId": "c3", "value": "" }, { "columnId": "c4", "value": "true" }, { "columnId": "c5", "value": "true" },
+          { "columnId": "o1", "value": "USA-008" }, { "columnId": "o2", "value": "Volcker Rule – Proprietary Trading" },
+          { "columnId": "o3", "value": "USA" }, { "columnId": "o4", "value": "BLOCK" },
+          { "columnId": "o5", "value": "Banking entities are prohibited from proprietary trading under the Volcker Rule." },
+          { "columnId": "o6", "value": "Bank Holding Company Act Section 619 (Volcker Rule)" }
+        ]
+      }
+    ]
+  }
+}
