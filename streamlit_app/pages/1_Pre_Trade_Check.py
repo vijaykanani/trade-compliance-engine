@@ -2,8 +2,10 @@ import streamlit as st
 import json
 from datetime import datetime
 from streamlit_app.utils.api_client import post_sync
+from streamlit_app.demo_auth import require_demo_access
 
 st.set_page_config(page_title="Pre-Trade Check", page_icon="🔍", layout="wide")
+require_demo_access()
 st.title("🔍 Pre-Trade Compliance Check")
 st.caption("Validate an order before it is placed. Checks Corporate, USA, and EMEA rules.")
 

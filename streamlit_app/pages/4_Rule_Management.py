@@ -1,186 +1,207 @@
 import streamlit as st
 import pandas as pd
+from streamlit_app.rule_store import create_rule, delete_rule, load_audit_log, load_rule_registry
 from streamlit_app.utils.api_client import get_sync
+from streamlit_app.demo_auth import require_demo_access
 
 st.set_page_config(page_title="Rule Management", page_icon="📜", layout="wide")
+require_demo_access()
 st.title("📜 Rule Management")
-st.caption(
-    "View all active compliance rules across jurisdictions. "
-    "Rules are managed in [DecisionRules.io](https://decisionrules.io) or the local rule engine."
-)
+st.caption("Enterprise rule catalogue, override tracking, and operational control administration.")
 
-# ── Load Rules ───────────────────────────────────────────────────────────────
+GROUPS = {
+    "corporate": "Corporate",
+    "usa": "USA",
+    "emea": "EMEA",
+    "public_markets": "Public Markets",
+    "private_markets": "Private Markets",
+    "digital_assets": "Digital Assets",
+    "ai_governance": "AI Governance",
+}
+
+
+def build_rule_dataframe(all_rules: dict) -> pd.DataFrame:
+    rows = []
+    for group_key, payload in all_rules.items():
+        if not isinstance(payload, dict):
+            continue
+        for rule in payload.get("rules", []):
+            record = dict(rule)
+            record["jurisdiction"] = GROUPS.get(group_key, group_key.replace("_", " ").title())
+            record["active"] = bool(rule.get("active", True))
+            record["notes"] = rule.get("notes", "")
+            rows.append(record)
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    for column in ["id", "name", "jurisdiction", "severity", "phase", "regulation", "notes"]:
+        if column not in df.columns:
+            df[column] = ""
+    df["active"] = df["active"].fillna(True).astype(bool)
+    return df
+
+
 try:
     all_rules = get_sync("/rules/")
 except Exception as e:
     st.error(f"Could not connect to API: {e}")
     st.stop()
 
-# ── Summary ──────────────────────────────────────────────────────────────────
-corp_rules = all_rules.get("corporate", {}).get("rules", [])
-usa_rules  = all_rules.get("usa", {}).get("rules", [])
-emea_rules = all_rules.get("emea", {}).get("rules", [])
+rule_df = build_rule_dataframe(all_rules)
+summary_counts = {label: len(all_rules.get(key, {}).get("rules", [])) for key, label in GROUPS.items()}
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Corporate Rules", len(corp_rules))
-c2.metric("USA Rules", len(usa_rules))
-c3.metric("EMEA Rules", len(emea_rules))
-c4.metric("Total Rules", len(corp_rules) + len(usa_rules) + len(emea_rules))
+c1.metric("Corporate", summary_counts.get("Corporate", 0))
+c2.metric("USA", summary_counts.get("USA", 0))
+c3.metric("EMEA", summary_counts.get("EMEA", 0))
+c4.metric("Total Rules", sum(summary_counts.values()))
 
 st.divider()
-
-# ── Tabs per Jurisdiction ────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4 = st.tabs(["🏢 Corporate", "🇺🇸 USA", "🇪🇺 EMEA", "🔍 Search All"])
-
-def render_rules_table(rules: list[dict]):
-    if not rules:
-        st.info("No rules found.")
-        return
-
-    df = pd.DataFrame(rules)
-    severity_color = {"BLOCK": "🔴", "WARNING": "🟡", "INFO": "🔵"}
-    phase_icon     = {"PRE": "⬅️ Pre-Trade", "POST": "➡️ Post-Trade"}
-
-    if "severity" in df.columns:
-        df["Severity"] = df["severity"].map(lambda s: f"{severity_color.get(s, '')} {s}")
-    if "phase" in df.columns:
-        df["Phase"] = df["phase"].map(lambda p: phase_icon.get(p, p))
-
-    display_cols = []
-    rename = {}
-    if "id" in df.columns:        display_cols.append("id");        rename["id"] = "Rule ID"
-    if "name" in df.columns:      display_cols.append("name");      rename["name"] = "Rule Name"
-    if "Severity" in df.columns:  display_cols.append("Severity")
-    if "Phase" in df.columns:     display_cols.append("Phase")
-    if "regulation" in df.columns: display_cols.append("regulation"); rename["regulation"] = "Regulation"
-
-    display_df = df[display_cols].rename(columns=rename)
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
-
-    # Block vs Warning breakdown
-    if "severity" in df.columns:
-        col_a, col_b = st.columns(2)
-        col_a.metric("BLOCK rules", len(df[df["severity"] == "BLOCK"]))
-        col_b.metric("WARNING rules", len(df[df["severity"] == "WARNING"]))
-
-
-with tab1:
-    st.subheader("Corporate Restrictions")
-    st.markdown(all_rules.get("corporate", {}).get("description", ""))
-    st.markdown("""
-    **Applies to:** All portfolios regardless of jurisdiction.
-    Covers firm-wide policies: restricted/watch lists, blackout periods,
-    mandate compliance, concentration limits, Chinese walls, and P&L stops.
-    """)
-    render_rules_table(corp_rules)
-
-
-with tab2:
-    st.subheader("USA Regulatory Rules")
-    st.markdown(all_rules.get("usa", {}).get("description", ""))
-    st.markdown("""
-    **Applies to:** USA-jurisdiction portfolios.
-
-    | Regulation | Coverage |
-    |-----------|----------|
-    | SEC Rule 10b-5 / Rule 144 | Insider trading, restricted securities |
-    | Regulation SHO | Short selling locate & close-out |
-    | Regulation T | Margin requirements (50% initial) |
-    | Rule 13D/G, Section 16 | Beneficial ownership thresholds |
-    | Investment Company Act | Diversification (5%/25% tests) |
-    | Volcker Rule | Proprietary trading ban for banks |
-    | FINRA PDT Rule | Pattern day trader restrictions |
-    | CFTC Part 150 | Commodity derivative position limits |
-    | Regulation NMS | Best execution |
-    | FINRA TRACE | Bond trade reporting (15-min) |
-    | SEC Rule 13F | Institutional manager reporting |
-    """)
-    render_rules_table(usa_rules)
-
-
-with tab3:
-    st.subheader("EMEA Regulatory Rules")
-    st.markdown(all_rules.get("emea", {}).get("description", ""))
-    st.markdown("""
-    **Applies to:** EMEA-jurisdiction portfolios (EU + UK).
-
-    | Regulation | Coverage |
-    |-----------|----------|
-    | MAR (EU 596/2014) | Insider trading, market manipulation, STR |
-    | EU Short Selling Reg | Net short notifications (0.1%, 0.5%) |
-    | MiFID II Art. 27/57 | Best execution, commodity position limits |
-    | MiFID II Art. 26 | T+1 transaction reporting |
-    | EMIR (EU 648/2012) | Derivative clearing & reporting |
-    | UCITS (2009/65/EC) | 5% issuer, 40% bucket rules |
-    | AIFMD (2011/61/EU) | Leverage limits |
-    | UK FCA DTR 5 | UK major shareholding (3% threshold) |
-    | EU Transparency Dir. | EU shareholding notification (5%+) |
-    | SFDR (2019/2088) | ESG score thresholds (Art. 8/9) |
-    | SFTR (2015/2365) | Securities financing T+1 reporting |
-    """)
-    render_rules_table(emea_rules)
-
-
-with tab4:
-    st.subheader("Search All Rules")
-    search = st.text_input("Search by rule ID, name, or regulation", placeholder="e.g. MAR, BLOCK, 13D...")
-
-    all_combined = (
-        [{"jurisdiction": "CORPORATE", **r} for r in corp_rules]
-        + [{"jurisdiction": "USA", **r} for r in usa_rules]
-        + [{"jurisdiction": "EMEA", **r} for r in emea_rules]
+with st.sidebar:
+    st.subheader("Filters")
+    search = st.text_input("Search rules", placeholder="ID, name, regulation...")
+    jurisdictions = st.multiselect(
+        "Jurisdiction",
+        options=sorted(rule_df["jurisdiction"].dropna().unique().tolist()),
+        default=sorted(rule_df["jurisdiction"].dropna().unique().tolist()),
     )
+    phases = st.multiselect(
+        "Phase",
+        options=sorted(rule_df["phase"].dropna().unique().tolist()),
+        default=sorted(rule_df["phase"].dropna().unique().tolist()),
+    )
+    severities = st.multiselect(
+        "Severity",
+        options=sorted(rule_df["severity"].dropna().unique().tolist()),
+        default=sorted(rule_df["severity"].dropna().unique().tolist()),
+    )
+    show_inactive = st.checkbox("Include inactive rules", value=True)
 
-    if search:
-        s = search.lower()
-        filtered = [
-            r for r in all_combined
-            if s in r.get("id", "").lower()
-            or s in r.get("name", "").lower()
-            or s in r.get("regulation", "").lower()
-            or s in r.get("severity", "").lower()
-            or s in r.get("jurisdiction", "").lower()
-        ]
-    else:
-        filtered = all_combined
+filtered_df = rule_df.copy()
+if jurisdictions:
+    filtered_df = filtered_df[filtered_df["jurisdiction"].isin(jurisdictions)]
+if phases:
+    filtered_df = filtered_df[filtered_df["phase"].isin(phases)]
+if severities:
+    filtered_df = filtered_df[filtered_df["severity"].isin(severities)]
+if search:
+    needle = search.lower()
+    filtered_df = filtered_df[
+        filtered_df["id"].astype(str).str.lower().str.contains(needle, na=False)
+        | filtered_df["name"].astype(str).str.lower().str.contains(needle, na=False)
+        | filtered_df["regulation"].astype(str).str.lower().str.contains(needle, na=False)
+    ]
+if not show_inactive:
+    filtered_df = filtered_df[filtered_df["active"] == True]
 
-    st.caption(f"Showing {len(filtered)} of {len(all_combined)} rules")
-    render_rules_table(filtered)
+st.caption(f"Showing {len(filtered_df)} rules")
 
-# ── DecisionRules.io Integration Info ────────────────────────────────────────
+editable = filtered_df[["jurisdiction", "id", "name", "phase", "severity", "regulation", "active", "notes"]].copy()
+editable["active"] = editable["active"].astype(bool)
+
+edited = st.data_editor(
+    editable,
+    use_container_width=True,
+    hide_index=True,
+    disabled=["jurisdiction", "id", "name", "phase", "severity", "regulation"],
+    column_config={
+        "active": st.column_config.CheckboxColumn("Active", help="Turn a rule on or off for policy enforcement"),
+        "notes": st.column_config.TextColumn("Notes", width="large"),
+    },
+)
+
+if st.button("Save local rule settings"):
+    st.session_state["local_rule_snapshot"] = edited.copy()
+    st.success("Local rule changes saved for this session.")
+
+if "local_rule_snapshot" in st.session_state:
+    st.info(f"{len(st.session_state['local_rule_snapshot'])} rules are currently persisted in the app session.")
+
 st.divider()
-st.subheader("DecisionRules.io Integration")
-st.markdown("""
-To manage rules via the DecisionRules.io no-code platform:
 
-1. Sign up at [decisionrules.io](https://decisionrules.io)
-2. Import the JSON configs from `decision_rules_config/` folder
-3. Copy your **API Key** and **Rule IDs** into your `.env` file
-4. The engine will automatically use DecisionRules.io when configured
+with st.expander("Create a new rule", expanded=True):
+    with st.form("create_rule_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            new_jurisdiction = st.selectbox("Jurisdiction", list(GROUPS.values()))
+            new_name = st.text_input("Rule name")
+            new_regulation = st.text_input("Regulation")
+        with col2:
+            new_severity = st.selectbox("Severity", ["BLOCK", "WARNING", "INFO"])
+            new_phase = st.selectbox("Phase", ["PRE", "POST"])
+            new_notes = st.text_area("Notes")
 
-**Benefits of DecisionRules.io:**
-- No-code rule editing via UI (business users can modify rules)
-- Version control & rollback
-- A/B testing of rule sets
-- Audit trail of rule changes
-- MCP integration for AI assistants
-- Real-time rule deployment without restart
+        submitted = st.form_submit_button("Create rule")
+        if submitted:
+            if not new_name.strip():
+                st.warning("Rule name is required.")
+            else:
+                registry = load_rule_registry()
+                mapped_group = next(key for key, value in GROUPS.items() if value == new_jurisdiction)
+                created = create_rule(
+                    jurisdiction=mapped_group,
+                    name=new_name,
+                    regulation=new_regulation or "Internal Policy",
+                    severity=new_severity,
+                    phase=new_phase,
+                    notes=new_notes,
+                    registry=registry,
+                    registry_path="streamlit_app/rule_registry.json",
+                    audit_path="streamlit_app/rule_audit.json",
+                )
+                st.success(f"Rule {created['id']} created successfully.")
+                st.rerun()
 
-**MCP (Model Context Protocol) Integration:**
-DecisionRules.io supports MCP servers, allowing AI assistants (Claude, GPT-4) to:
-- Query which rules apply to a given trade
-- Explain why a trade was blocked
-- Suggest rule modifications
-""")
+with st.expander("Delete an existing rule"):
+    deleted_rule_id = st.text_input("Rule ID to remove")
+    deleted_jurisdiction = st.selectbox("Jurisdiction", list(GROUPS.values()), key="delete_rule_jurisdiction")
+    if st.button("Delete rule"):
+        registry = load_rule_registry()
+        mapped_group = next(key for key, value in GROUPS.items() if value == deleted_jurisdiction)
+        removed = delete_rule(
+            jurisdiction=mapped_group,
+            rule_id=deleted_rule_id.strip(),
+            registry=registry,
+            registry_path="streamlit_app/rule_registry.json",
+            audit_path="streamlit_app/rule_audit.json",
+        )
+        if removed:
+            st.success(f"Rule {deleted_rule_id.strip()} deleted.")
+            st.rerun()
+        else:
+            st.warning("No matching rule was found for deletion.")
 
-with st.expander("View .env configuration template"):
-    st.code("""
-# Add to your .env file
-DECISION_RULES_API_KEY=your-api-key-here
-DR_RULE_ID_PRE_TRADE_CORPORATE=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DR_RULE_ID_PRE_TRADE_USA=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DR_RULE_ID_PRE_TRADE_EMEA=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DR_RULE_ID_POST_TRADE_CORPORATE=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DR_RULE_ID_POST_TRADE_USA=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DR_RULE_ID_POST_TRADE_EMEA=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    """, language="bash")
+st.divider()
+
+rule_tabs = st.tabs(["Public Markets", "Private Markets", "Digital Assets", "AI Governance", "USA", "EMEA", "Corporate", "Audit Trail"])
+for idx, label in enumerate(["Public Markets", "Private Markets", "Digital Assets", "AI Governance", "USA", "EMEA", "Corporate", "Audit Trail"]):
+    with rule_tabs[idx]:
+        if label == "Audit Trail":
+            audit_log = load_audit_log("streamlit_app/rule_audit.json")
+            if audit_log:
+                st.dataframe(pd.DataFrame(audit_log), use_container_width=True, hide_index=True)
+            else:
+                st.info("No changes recorded yet.")
+            continue
+
+        group_key = next((key for key, value in GROUPS.items() if value == label), None)
+        if group_key is None:
+            continue
+        table = edited[edited["jurisdiction"] == label].copy()
+        if table.empty:
+            st.info(f"No rules found in {label}.")
+        else:
+            st.dataframe(table, use_container_width=True, hide_index=True)
+
+st.divider()
+st.subheader("In-app rule workflow")
+st.markdown(
+    """
+    1. Review the rule catalogue by market domain and jurisdiction.\n
+    2. Search for a rule by ID, name, or regulation.\n
+    3. Toggle activation and annotate the operational rationale.\n
+    4. Create or remove rules directly from this console.\n
+    5. Review the audit trail for all rule changes and decisions.\n
+    """
+)

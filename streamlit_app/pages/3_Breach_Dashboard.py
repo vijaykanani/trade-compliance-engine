@@ -3,8 +3,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_app.utils.api_client import get_sync, post_sync
+from streamlit_app.demo_auth import require_demo_access
 
 st.set_page_config(page_title="Breach Dashboard", page_icon="📊", layout="wide")
+require_demo_access()
 st.title("📊 Compliance Breach Dashboard")
 st.caption("Monitor, investigate, and resolve compliance breaches.")
 

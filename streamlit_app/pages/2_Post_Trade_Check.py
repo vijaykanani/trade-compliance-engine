@@ -1,8 +1,10 @@
 import streamlit as st
 from datetime import datetime
 from streamlit_app.utils.api_client import post_sync
+from streamlit_app.demo_auth import require_demo_access
 
 st.set_page_config(page_title="Post-Trade Check", page_icon="📋", layout="wide")
+require_demo_access()
 st.title("📋 Post-Trade Compliance Check")
 st.caption("Run compliance checks after trade execution — breach detection, reporting deadlines, wash trades.")
 

@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     api_secret_key: str = "dev-secret-key"
+    rule_admin_api_key: str = ""
 
     # Database
     database_url: str = "sqlite+aiosqlite:///./compliance.db"

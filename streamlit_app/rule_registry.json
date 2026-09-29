@@ -1,0 +1,163 @@
+{
+  "corporate": {
+    "description": "Enterprise-wide restrictions, personal account dealing, and risk controls.",
+    "rules": [
+      {
+        "id": "COR-001",
+        "name": "Restricted Securities List",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "Internal Policy",
+        "active": true,
+        "notes": "Global restricted list"
+      },
+      {
+        "id": "COR-002",
+        "name": "Blackout / Closed Period",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "Internal Risk Policy",
+        "active": true,
+        "notes": "Earnings, M&A, and event blackouts"
+      }
+    ]
+  },
+  "usa": {
+    "description": "US market rules covering SEC, FINRA, CFTC, and regulatory reporting.",
+    "rules": [
+      {
+        "id": "USA-001",
+        "name": "Reg SHO \u2013 Locate Requirement",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "Reg SHO Rule 203",
+        "active": true,
+        "notes": "Equity shortenings require locate"
+      },
+      {
+        "id": "USA-002",
+        "name": "SEC 13D/13G Disclosure Threshold",
+        "severity": "WARNING",
+        "phase": "PRE",
+        "regulation": "Rule 13D/13G",
+        "active": true,
+        "notes": "Beneficial ownership monitoring"
+      }
+    ]
+  },
+  "emea": {
+    "description": "EMEA rules for market abuse, short sales, and cross-border reporting.",
+    "rules": [
+      {
+        "id": "EMEA-001",
+        "name": "MAR Insider Trading",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "MAR Art. 8",
+        "active": true,
+        "notes": "Inside information checks"
+      },
+      {
+        "id": "EMEA-002",
+        "name": "MiFID II Best Execution",
+        "severity": "WARNING",
+        "phase": "PRE",
+        "regulation": "MiFID II Art. 27",
+        "active": true,
+        "notes": "Execution quality review"
+      }
+    ]
+  },
+  "public_markets": {
+    "description": "Public market compliance for equities, fixed income, and listed derivatives.",
+    "rules": [
+      {
+        "id": "PUB-001",
+        "name": "Public Equity Surveillance",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "Exchange and local market rules",
+        "active": true,
+        "notes": "Trade surveillance for public equities"
+      },
+      {
+        "id": "PUB-002",
+        "name": "Listed Derivatives Position Limit",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "Derivative exchange and CFTC rules",
+        "active": true,
+        "notes": "Commodity and derivative limits"
+      }
+    ]
+  },
+  "private_markets": {
+    "description": "Private market checks for secondaries, direct lending, illiquid assets, and bespoke structures.",
+    "rules": [
+      {
+        "id": "PRV-001",
+        "name": "Private Deal Restriction",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "Private placement and investor restrictions",
+        "active": true,
+        "notes": "Investor eligibility and lock-up checks"
+      },
+      {
+        "id": "PRV-002",
+        "name": "Side Letter / Transfer Restriction",
+        "severity": "WARNING",
+        "phase": "PRE",
+        "regulation": "Side letter and LP agreement requirements",
+        "active": true,
+        "notes": "Transfer restrictions, consents, rights of first refusal"
+      }
+    ]
+  },
+  "digital_assets": {
+    "description": "Digital asset rules covering custody, wallet controls, sanctions, AML, and market manipulation.",
+    "rules": [
+      {
+        "id": "DAS-001",
+        "name": "Wallet Screening and Sanctions",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "OFAC, AML, FATF, travel rule",
+        "active": true,
+        "notes": "Blockchain wallet exposure screening"
+      },
+      {
+        "id": "DAS-002",
+        "name": "Stablecoin and Digital Asset Risk Review",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "MiCA, AMLD, local digital asset laws",
+        "active": true,
+        "notes": "Custody, token classification, liquidity checks"
+      }
+    ]
+  },
+  "ai_governance": {
+    "description": "AI governance, model risk, monitoring, bias, privacy, and audit requirements.",
+    "rules": [
+      {
+        "id": "AI-001",
+        "name": "AI Model Risk Review",
+        "severity": "BLOCK",
+        "phase": "PRE",
+        "regulation": "Model risk, AI governance, internal policy",
+        "active": true,
+        "notes": "Assess model use-case and risk tier"
+      },
+      {
+        "id": "AI-002",
+        "name": "Bias, Fairness, and Explainability Check",
+        "severity": "WARNING",
+        "phase": "PRE",
+        "regulation": "AI governance and fairness standards",
+        "active": true,
+        "notes": "Requested for decision-support models"
+      }
+    ]
+  }
+}
