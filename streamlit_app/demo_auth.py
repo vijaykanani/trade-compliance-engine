@@ -4,6 +4,17 @@ import hmac
 import json
 import os
 import time
+from urllib.parse import urlencode
+
+
+PAGES = (
+    ("Home", "/"),
+    ("Pre-Trade Check", "/Pre_Trade_Check"),
+    ("Post-Trade Check", "/Post_Trade_Check"),
+    ("Breach Dashboard", "/Breach_Dashboard"),
+    ("Rule Management", "/Rule_Management"),
+    ("Domain Workflows", "/Domain_Workflows"),
+)
 
 def valid_demo_token(token: str, secret: str) -> bool:
     try:
@@ -19,20 +30,51 @@ def valid_demo_token(token: str, secret: str) -> bool:
         return False
 
 
+def demo_page_url(path: str) -> str:
+    import streamlit as st
+
+    secret = os.environ.get("DEMO_ACCESS_SECRET", "")
+    token = st.query_params.get("demo_access", "")
+    if not valid_demo_token(token, secret):
+        token = st.session_state.get("_demo_access_token", "")
+    if not secret or not valid_demo_token(token, secret):
+        return path
+
+    separator = "&" if "?" in path else "?"
+    return f"{path}{separator}{urlencode({'demo_access': token})}"
+
+
+def render_demo_page_link(path: str, label: str) -> None:
+    import streamlit as st
+
+    st.markdown(f"[{label}]({demo_page_url(path)})")
+
+
+def render_demo_navigation() -> None:
+    import streamlit as st
+
+    st.sidebar.markdown("**Navigation**")
+    for label, path in PAGES:
+        render_demo_page_link(path, label)
+
+
 def require_demo_access() -> None:
     import streamlit as st
 
     secret = os.environ.get("DEMO_ACCESS_SECRET")
     if not secret:
+        render_demo_navigation()
         return
 
     token = st.query_params.get("demo_access", "")
     if valid_demo_token(token, secret):
         st.session_state["_demo_access_token"] = token
+        render_demo_navigation()
         return
 
     session_token = st.session_state.get("_demo_access_token", "")
     if valid_demo_token(session_token, secret):
+        render_demo_navigation()
         return
 
     st.error("This Kens Control demo requires an approved, unexpired access link.")

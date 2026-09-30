@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_app.demo_auth import require_demo_access
+from streamlit_app.demo_auth import render_demo_page_link, require_demo_access
 
 st.set_page_config(
     page_title="Trade Compliance Command Center",
@@ -29,15 +29,15 @@ st.divider()
 
 nav = st.columns(4)
 with nav[0]:
-    st.page_link("pages/1_Pre_Trade_Check.py", label="🔎 Pre-Trade Check")
+    render_demo_page_link("/Pre_Trade_Check", "🔎 Pre-Trade Check")
 with nav[1]:
-    st.page_link("pages/2_Post_Trade_Check.py", label="📋 Post-Trade Check")
+    render_demo_page_link("/Post_Trade_Check", "📋 Post-Trade Check")
 with nav[2]:
-    st.page_link("pages/3_Breach_Dashboard.py", label="📊 Breach Dashboard")
+    render_demo_page_link("/Breach_Dashboard", "📊 Breach Dashboard")
 with nav[3]:
-    st.page_link("pages/4_Rule_Management.py", label="📜 Rule Management")
+    render_demo_page_link("/Rule_Management", "📜 Rule Management")
 
-st.page_link("pages/5_Domain_Workflows.py", label="🧭 Domain Compliance Workflows")
+render_demo_page_link("/Domain_Workflows", "🧭 Domain Compliance Workflows")
 
 st.divider()
 

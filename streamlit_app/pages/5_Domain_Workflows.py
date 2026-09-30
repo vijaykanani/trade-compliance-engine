@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from streamlit_app.domain_workflows import DOMAIN_RULES, load_assessments, save_assessment
-from streamlit_app.demo_auth import require_demo_access
+from streamlit_app.demo_auth import render_demo_page_link, require_demo_access
 
 st.set_page_config(page_title="Domain Compliance Workflows", page_icon="🧭", layout="wide")
 require_demo_access()
@@ -34,9 +34,9 @@ with tabs[0]:
     st.write("Listed equities, fixed income, ETFs, FX, commodities, and derivatives use order-based pre-trade and executed-trade post-trade checks.")
     public_nav = st.columns(2)
     with public_nav[0]:
-        st.page_link("pages/1_Pre_Trade_Check.py", label="🔎 Open pre-trade check")
+        render_demo_page_link("/Pre_Trade_Check", "🔎 Open pre-trade check")
     with public_nav[1]:
-        st.page_link("pages/2_Post_Trade_Check.py", label="📋 Open post-trade check")
+        render_demo_page_link("/Post_Trade_Check", "📋 Open post-trade check")
     st.markdown("**Lifecycle controls**")
     st.write("Mandate and restricted-list checks · position and concentration limits · short-sale and locate checks · market-abuse surveillance · execution and regulatory reporting")
 
