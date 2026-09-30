@@ -28,6 +28,11 @@ def require_demo_access() -> None:
 
     token = st.query_params.get("demo_access", "")
     if valid_demo_token(token, secret):
+        st.session_state["_demo_access_token"] = token
+        return
+
+    session_token = st.session_state.get("_demo_access_token", "")
+    if valid_demo_token(session_token, secret):
         return
 
     st.error("This Kens Control demo requires an approved, unexpired access link.")
