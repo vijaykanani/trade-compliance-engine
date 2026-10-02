@@ -1,0 +1,16 @@
+name: Keep services awake
+
+on:
+  schedule:
+    # Every 10 minutes keeps free Render services warm
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping compliance API health
+        run: curl -fsS --max-time 30 -o /dev/null "${{ vars.DEMO_API_HEALTH_URL }}" || true
+      - name: Ping Streamlit app
+        run: curl -fsS --max-time 30 -o /dev/null "${{ vars.DEMO_APP_URL }}" || true
